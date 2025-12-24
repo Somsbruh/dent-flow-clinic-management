@@ -26,9 +26,9 @@ function EmployeeProfileContent({ id }: { id: string }) {
   if (!mounted) {
     return (
       <div className="flex min-h-screen bg-background">
-        <Sidebar isOpen={false} onClose={() => {}} />
+        <Sidebar isOpen={false} onClose={() => { }} />
         <div className="flex-1 lg:pl-[240px]">
-          <Header onMenuClick={() => {}} />
+          <Header onMenuClick={() => { }} />
           <main className="p-4 md:p-6">
             <div className="animate-pulse space-y-4">
               <div className="h-8 w-32 bg-muted rounded" />

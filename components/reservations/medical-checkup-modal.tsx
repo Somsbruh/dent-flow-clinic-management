@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Stethoscope, Camera, HeartPulse, FileCheck, ChevronRight, Smile, X } from "lucide-react"
+import { Stethoscope, Camera, HeartPulse, FileCheck, ChevronRight, Smile, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InteractiveToothChart } from "@/components/shared/interactive-tooth-chart"
 import { ToothData, TOOTH_NAMES, CONDITIONS } from "@/lib/tooth-types"
 
@@ -41,6 +42,12 @@ interface MedicalCheckupData {
   teethData: Record<number, ToothData>
   oralCheckNotes: string
   agreedToPlan: boolean
+  occlusi: string
+  torusPalatinus: string
+  torusMandibularis: string
+  palatum: string
+  diastema: boolean
+  diastemaNotes: string
 }
 
 const SICKNESSES = ["Heart Disease", "Covid-19", "Haemophilia", "Hepatitis", "Gastring", "Other Disease"]
@@ -48,7 +55,7 @@ const ALLERGIES = ["Penicillin", "Aspirin", "Latex", "Local Anesthesia", "Ibupro
 
 // CONDITIONS is imported from @/lib/tooth-types
 // TREATMENTS is now defined locally since the shared one has different structure
-const TREATMENTS_LOCAL = [
+const TREATMENTS = [
   { code: "multi", label: "Teeth Whitening", type: "multi" },
   { code: "single", label: "Teeth Cleaning", type: "single" },
   { code: "single", label: "Tooth Fillings", type: "single" },
@@ -123,6 +130,12 @@ export function MedicalCheckupModal({
     },
     oralCheckNotes: "",
     agreedToPlan: false,
+    occlusi: "Normal Bite",
+    torusPalatinus: "No",
+    torusMandibularis: "No",
+    palatum: "No",
+    diastema: false,
+    diastemaNotes: "",
   })
 
   // Temporary state for tooth popup editing
@@ -866,7 +879,7 @@ export function MedicalCheckupModal({
 
           {/* Step 3: Oral Check */}
           {currentStep === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
                 <svg
                   className="h-4 w-4 text-blue-500 flex-shrink-0"
@@ -882,51 +895,160 @@ export function MedicalCheckupModal({
                   />
                 </svg>
                 <span className="text-sm text-blue-700">
-                  Document any additional findings from the oral examination.
+                  Patient & Medical data are based on previous check, you can update it according to latest data.
                 </span>
               </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Oral Check Notes</Label>
-                <Textarea
-                  placeholder="Document any findings from the oral examination..."
-                  value={formData.oralCheckNotes}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, oralCheckNotes: e.target.value }))}
-                  className="mt-2 min-h-[150px] rounded-xl resize-none"
-                />
+              {/* Occlusi */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">Occlusi</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Normal Bite", "Cross Bite", "Steep Bite"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, occlusi: option }))}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all",
+                        formData.occlusi === option
+                          ? "bg-blue-50 border-primary text-primary font-medium"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-full border flex items-center justify-center",
+                          formData.occlusi === option ? "border-primary" : "border-gray-300",
+                        )}
+                      >
+                        {formData.occlusi === option && <div className="w-2 h-2 rounded-full bg-primary" />}
+                      </div>
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Summary of teeth with issues */}
-              {Object.keys(formData.teethData).length > 0 && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Teeth with Issues</Label>
-                  <div className="space-y-2">
-                    {Object.entries(formData.teethData).map(([toothId, data]) => (
-                      <div key={toothId} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={cn(
-                              "w-2.5 h-2.5 rounded-full",
-                              data.status === "recent"
-                                ? "bg-red-500"
-                                : data.status === "hasTreatment"
-                                  ? "bg-blue-500"
-                                  : "bg-amber-500",
-                            )}
-                          />
-                          <span className="font-medium">
-                            {TOOTH_NAMES[Number(toothId)]} #{toothId}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {CONDITIONS.find((c) => c.code === data.condition)?.label} -{" "}
-                          {data.treatment || "No treatment"}
-                        </div>
+              {/* Torus Palatinus */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">Torus Palatinus</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["No", "Small", "Medium", "Large", "Multiple"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, torusPalatinus: option }))}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all",
+                        formData.torusPalatinus === option
+                          ? "bg-blue-50 border-primary text-primary font-medium"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-full border flex items-center justify-center",
+                          formData.torusPalatinus === option ? "border-primary" : "border-gray-300",
+                        )}
+                      >
+                        {formData.torusPalatinus === option && <div className="w-2 h-2 rounded-full bg-primary" />}
                       </div>
-                    ))}
-                  </div>
+                      {option}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              {/* Torus Mandibularis */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">Torus Mandibularis</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {["No", "Left side", "Right side", "Both side"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, torusMandibularis: option }))}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-2.5 rounded-xl border text-xs transition-all",
+                        formData.torusMandibularis === option
+                          ? "bg-blue-50 border-primary text-primary font-medium"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0",
+                          formData.torusMandibularis === option ? "border-primary" : "border-gray-300",
+                        )}
+                      >
+                        {formData.torusMandibularis === option && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                      </div>
+                      <span className="truncate">{option}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Palatum */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">Palatum</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {["No", "Left side", "Right side", "Both side"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, palatum: option }))}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-2.5 rounded-xl border text-xs transition-all",
+                        formData.palatum === option
+                          ? "bg-blue-50 border-primary text-primary font-medium"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0",
+                          formData.palatum === option ? "border-primary" : "border-gray-300",
+                        )}
+                      >
+                        {formData.palatum === option && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                      </div>
+                      <span className="truncate">{option}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diastema */}
+              <div className="space-y-3">
+                <div
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => setFormData((prev) => ({ ...prev, diastema: !prev.diastema }))}
+                >
+                  <div
+                    className={cn(
+                      "w-5 h-5 rounded border flex items-center justify-center transition-all",
+                      formData.diastema ? "bg-primary border-primary" : "border-gray-300",
+                    )}
+                  >
+                    {formData.diastema && (
+                      <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <Label className="text-sm font-medium text-gray-700 cursor-pointer">Diastema</Label>
+                </div>
+
+                <div className={cn("space-y-2 transition-all duration-300", formData.diastema ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden")}>
+                  <Textarea
+                    placeholder="Explain where and how wide"
+                    value={formData.diastemaNotes}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, diastemaNotes: e.target.value }))}
+                    className="min-h-[80px] rounded-xl bg-gray-50 border-none resize-none focus-visible:ring-1 focus-visible:ring-primary"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
