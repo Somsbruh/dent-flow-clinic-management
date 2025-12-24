@@ -38,12 +38,12 @@ export const TREATMENTS = [
     { type: "single", label: "Teeth Whitening" },
     { type: "single", label: "Teeth Cleaning" },
     { type: "single", label: "Tooth Fillings" },
-    { type: "mult", label: "Tooth Extraction" },
+    { type: "multi", label: "Tooth Extraction" },
     { type: "single", label: "Crowns" },
-    { type: "mult", label: "Tooth Scaling" },
-    { type: "mult", label: "Filling canal" },
+    { type: "multi", label: "Tooth Scaling" },
+    { type: "multi", label: "Filling canal" },
     { type: "single", label: "Replace tooth" },
-    { type: "mult", label: "Root canal" },
+    { type: "multi", label: "Root canal" },
     { type: "single", label: "Veneer" },
 ] as const
 
@@ -85,6 +85,30 @@ export const TOOTH_NAMES: Record<number, string> = {
     46: "1st Molar",
     47: "2nd Molar",
     48: "3rd Molar",
+    // Deciduous Upper Right (5)
+    51: "Upper Right Central Incisor",
+    52: "Upper Right Lateral Incisor",
+    53: "Upper Right Canine",
+    54: "Upper Right 1st Molar",
+    55: "Upper Right 2nd Molar",
+    // Deciduous Upper Left (6)
+    61: "Upper Left Central Incisor",
+    62: "Upper Left Lateral Incisor",
+    63: "Upper Left Canine",
+    64: "Upper Left 1st Molar",
+    65: "Upper Left 2nd Molar",
+    // Deciduous Lower Left (7)
+    71: "Lower Left Central Incisor",
+    72: "Lower Left Lateral Incisor",
+    73: "Lower Left Canine",
+    74: "Lower Left 1st Molar",
+    75: "Lower Left 2nd Molar",
+    // Deciduous Lower Right (8)
+    81: "Lower Right Central Incisor",
+    82: "Lower Right Lateral Incisor",
+    83: "Lower Right Canine",
+    84: "Lower Right 1st Molar",
+    85: "Lower Right 2nd Molar",
 }
 
 // Quadrant labels

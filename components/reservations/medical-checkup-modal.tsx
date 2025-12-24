@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Stethoscope, Camera, HeartPulse, FileCheck, ChevronRight, Smile, X } from "lucide-react"
+import { Stethoscope, Camera, HeartPulse, FileCheck, ChevronRight, Smile, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,8 +9,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { InteractiveToothChart } from "@/components/shared/interactive-tooth-chart"
-import { ToothData, TOOTH_NAMES, CONDITIONS } from "@/lib/tooth-types"
+import { DentalChart } from "@/components/shared/DentalChart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ToothData, TOOTH_NAMES, CONDITIONS, TREATMENTS } from "@/lib/tooth-types"
 
 interface MedicalCheckupModalProps {
   isOpen: boolean
@@ -46,18 +53,6 @@ interface MedicalCheckupData {
 const SICKNESSES = ["Heart Disease", "Covid-19", "Haemophilia", "Hepatitis", "Gastring", "Other Disease"]
 const ALLERGIES = ["Penicillin", "Aspirin", "Latex", "Local Anesthesia", "Ibuprofen", "Other"]
 
-// CONDITIONS is imported from @/lib/tooth-types
-// TREATMENTS is now defined locally since the shared one has different structure
-const TREATMENTS_LOCAL = [
-  { code: "multi", label: "Teeth Whitening", type: "multi" },
-  { code: "single", label: "Teeth Cleaning", type: "single" },
-  { code: "single", label: "Tooth Fillings", type: "single" },
-  { code: "multi", label: "Tooth Extraction", type: "multi" },
-  { code: "single", label: "Crowns", type: "single" },
-  { code: "multi", label: "Tooth Scaling", type: "multi" },
-  { code: "single", label: "Replace tooth", type: "single" },
-]
-
 // TOOTH_NAMES is imported from @/lib/tooth-types
 
 const steps = [
@@ -78,6 +73,7 @@ export function MedicalCheckupModal({
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
   const [showToothHistory, setShowToothHistory] = useState(false)
   const [toothPopup, setToothPopup] = useState<{ tooth: number; isEditing: boolean } | null>(null)
+  const [isChildDentition, setIsChildDentition] = useState(false)
 
   const [formData, setFormData] = useState<MedicalCheckupData>({
     bloodPressureMm: "",
@@ -218,121 +214,6 @@ export function MedicalCheckupModal({
     setToothPopup(null)
   }
 
-  // Dental Arch Chart Component
-  const DentalArchChart = () => {
-    // Upper teeth positions (based on image layout)
-    const toothPositions: Record<number, { x: number; y: number; w: number; h: number }> = {
-      // Upper left (18-11)
-      18: { x: 8, y: 28, w: 7, h: 8 },
-      17: { x: 15, y: 24, w: 7, h: 8 },
-      16: { x: 22, y: 20, w: 7, h: 9 },
-      15: { x: 29, y: 17, w: 6, h: 8 },
-      14: { x: 35, y: 14, w: 6, h: 8 },
-      13: { x: 41, y: 10, w: 5, h: 9 },
-      12: { x: 46, y: 7, w: 4, h: 8 },
-      11: { x: 50, y: 5, w: 4, h: 9 },
-      // Upper right (21-28)
-      21: { x: 54, y: 5, w: 4, h: 8 },
-      22: { x: 58, y: 7, w: 4, h: 8 },
-      23: { x: 62, y: 10, w: 5, h: 9 },
-      24: { x: 67, y: 14, w: 6, h: 8 },
-      25: { x: 73, y: 17, w: 6, h: 8 },
-      26: { x: 79, y: 20, w: 7, h: 9 },
-      27: { x: 86, y: 24, w: 7, h: 8 },
-      28: { x: 93, y: 28, w: 7, h: 8 },
-      // Lower left (48-41)
-      48: { x: 8, y: 72, w: 7, h: 8 },
-      47: { x: 15, y: 68, w: 7, h: 8 },
-      46: { x: 22, y: 63, w: 7, h: 9 },
-      45: { x: 29, y: 58, w: 6, h: 8 },
-      44: { x: 35, y: 53, w: 6, h: 8 },
-      43: { x: 41, y: 48, w: 5, h: 8 },
-      42: { x: 46, y: 44, w: 4, h: 8 },
-      41: { x: 50, y: 42, w: 4, h: 8 },
-      // Lower right (31-38)
-      31: { x: 54, y: 42, w: 4, h: 8 },
-      32: { x: 58, y: 44, w: 4, h: 8 },
-      33: { x: 62, y: 48, w: 5, h: 8 },
-      34: { x: 67, y: 53, w: 6, h: 8 },
-      35: { x: 73, y: 58, w: 6, h: 8 },
-      36: { x: 79, y: 63, w: 7, h: 9 },
-      37: { x: 86, y: 68, w: 7, h: 8 },
-      38: { x: 93, y: 72, w: 7, h: 8 },
-    }
-
-    const getToothHighlightColor = (toothId: number) => {
-      const data = formData.teethData[toothId]
-      if (!data?.status) return "transparent"
-      switch (data.status) {
-        case "recent":
-          return "rgba(239, 68, 68, 0.3)" // red
-        case "hasTreatment":
-          return "rgba(59, 130, 246, 0.3)" // blue
-        case "recommended":
-          return "rgba(245, 158, 11, 0.3)" // amber
-        default:
-          return "transparent"
-      }
-    }
-
-    return (
-      <div className="relative">
-        <div className="relative w-full max-w-[320px] mx-auto">
-          <img
-            src="/images/tooth-chart-new.jpg"
-            alt="Dental Arch Chart"
-            className="w-full h-auto"
-            style={{ filter: "brightness(1.05)" }}
-          />
-
-          {/* Clickable overlay areas for each tooth */}
-          <div className="absolute inset-0">
-            {Object.entries(toothPositions).map(([toothId, pos]) => {
-              const id = Number.parseInt(toothId)
-              const data = formData.teethData[id]
-              const isSelected = selectedTooth === id
-
-              return (
-                <button
-                  key={id}
-                  onClick={() => handleToothClick(id)}
-                  className={cn(
-                    "absolute rounded-full transition-all duration-300 hover:scale-110",
-                    "hover:shadow-[0_0_12px_2px_rgba(59,130,246,0.6)] hover:bg-blue-400/20", // Glow effect
-                    isSelected && "ring-2 ring-primary ring-offset-1 shadow-[0_0_12px_2px_rgba(59,130,246,0.6)]",
-                  )}
-                  style={{
-                    left: `${pos.x}%`,
-                    top: `${pos.y}%`,
-                    width: `${pos.w}%`,
-                    height: `${pos.h}%`,
-                    backgroundColor: getToothHighlightColor(id),
-                  }}
-                  title={`${TOOTH_NAMES[id] || "Tooth"} (${id})`}
-                />
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-4 text-xs">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            <span className="text-gray-600">Recent findings</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <span className="text-gray-600">Has treatment before</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            <span className="text-gray-600">Recomended to be treated</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   // Tooth Popup Component
   const ToothPopup = () => {
@@ -379,7 +260,7 @@ export function MedicalCheckupModal({
               <Label className="text-xs text-gray-500 mb-1 block">Select condition</Label>
               <Select
                 value={tempToothData.condition || ""}
-                onValueChange={(v) => setTempToothData((prev) => ({ ...prev, condition: v }))}
+                onValueChange={(v: string) => setTempToothData((prev) => ({ ...prev, condition: v }))}
               >
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select condition" />
@@ -401,13 +282,13 @@ export function MedicalCheckupModal({
               <Label className="text-xs text-gray-500 mb-1 block">Select treatment</Label>
               <Select
                 value={tempToothData.treatment || ""}
-                onValueChange={(v) => setTempToothData((prev) => ({ ...prev, treatment: v }))}
+                onValueChange={(v: string) => setTempToothData((prev) => ({ ...prev, treatment: v }))}
               >
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select treatment" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TREATMENTS.map((t, i) => (
+                  {TREATMENTS.map((t, i: number) => (
                     <SelectItem key={i} value={t.label}>
                       <div className="flex items-center gap-2">
                         <span
@@ -835,30 +716,36 @@ export function MedicalCheckupModal({
                 <p className="text-sm text-gray-500">Select a problem tooths</p>
               </div>
 
+              {/* Dentition Toggle */}
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <Button
+                  variant={isChildDentition ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => setIsChildDentition(false)}
+                  className="rounded-xl"
+                >
+                  Adult
+                </Button>
+                <Button
+                  variant={isChildDentition ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setIsChildDentition(true)}
+                  className="rounded-xl"
+                >
+                  Child
+                </Button>
+              </div>
+
               {/* Dental Chart with Popup */}
-              <div className="relative">
-                <InteractiveToothChart
-                  teethData={formData.teethData}
-                  onToothDataChange={(toothId, data) => {
-                    if (data) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        teethData: {
-                          ...prev.teethData,
-                          [toothId]: data,
-                        },
-                      }))
-                    } else {
-                      // Delete tooth data
-                      setFormData((prev) => {
-                        const newTeethData = { ...prev.teethData }
-                        delete newTeethData[toothId]
-                        return { ...prev, teethData: newTeethData }
-                      })
-                    }
-                  }}
-                  size="md"
-                  showLegend={true}
+              <div className="relative border border-gray-100 rounded-2xl bg-white p-4">
+                <DentalChart
+                  isChild={isChildDentition}
+                  selectedTeeth={selectedTooth ? [selectedTooth.toString()] : []}
+                  teethStatus={Object.fromEntries(
+                    Object.entries(formData.teethData).map(([id, data]) => [id, data.status || "healthy"])
+                  )}
+                  onToothSelect={(toothCode) => handleToothClick(parseInt(toothCode))}
+                  className="min-h-[300px]"
                 />
               </div>
             </div>
