@@ -48,7 +48,7 @@ const navigation = [
     section: "FINANCE",
     items: [
       { name: "Accounts", href: "/billing", icon: CreditCard },
-      { name: "Sales", href: "/billing", icon: BarChart3 },
+      { name: "Sales", href: "/sales", icon: BarChart3 },
       { name: "Purchases", href: "/billing", icon: ShoppingCart },
       { name: "Payment Method", href: "/billing", icon: Wallet },
     ],
